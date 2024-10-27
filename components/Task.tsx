@@ -1,42 +1,61 @@
+import { Colors } from "@/constants/Colors";
+import { completeTask } from "@/sqlitedb";
 import { formatDate } from "@/utils";
-import { Task as TaskType } from "@/zustand/store";
+import useTaskStore, { Task as TaskType } from "@/zustand/store";
 import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
-import { Gesture, GestureDetector, TouchableHighlight } from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 const { height, width } = Dimensions.get('screen');
 
 export function Task({ task }: { task: TaskType }) {
-    const rippleOpacity = useSharedValue(0);
-    const rippleScale = useSharedValue(0);
+    const { setTriggerUpdate } = useTaskStore((state) => state);
 
-    const rippleGesture = Gesture.Tap().onStart(() => {
-        // Reset values and animate ripple
-        rippleOpacity.value = withTiming(1, { duration: 300 });
-        rippleScale.value = withTiming(3, { duration: 300 }, () => {
-        // Fade out ripple after it completes expanding
-        rippleOpacity.value = withTiming(0, { duration: 300 });
-        rippleScale.value = withTiming(0, { duration: 300 });
-        });
-    });
+    const offset = useSharedValue(0);
 
-    // Animated style for ripple effect
-    const rippleStyle = useAnimatedStyle(() => {
+    const panGesture = Gesture.Pan()
+        .onChange((event) => {
+            if (event.translationX < 0 && event.translationX > (width * 0.20 * -1)) {
+                offset.value = event.translationX;
+            }
+        })
+        .onFinalize((event) => {
+            if (event.translationX < (width * 0.20 * -1)) {
+                offset.value = width * 0.20 * -1
+            } else {
+                offset.value = withTiming(0)
+            }
+        }).activeOffsetX([-10, 10]);
+
+    const offsetAnimation = useAnimatedStyle(() => {
         return {
-        opacity: rippleOpacity.value,
-        transform: [{ scale: rippleScale.value }],
+            transform: [{ translateX: offset.value }],
         };
     });
 
+    const handleCompleteStatus = async () => {
+        try {
+            await completeTask(task.id, false, !task.completed);
+            setTriggerUpdate()
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     return (
-        <GestureDetector gesture={rippleGesture}>
-            <TouchableHighlight style={styles.container}>
+        <GestureDetector gesture={panGesture} >
+            <View style={styles.container}>
                 <>
-                    <Text style={styles.text}>{task.task}</Text>
-                    <Text>{`Added on ${formatDate(new Date(task.createdAt))}`}</Text>
-                    <Animated.View style={[ styles.ripple, rippleStyle ]} />
+                    <Animated.View style={[offsetAnimation, styles.animatedContainer]}>
+                        <Text style={styles.text}>{task.task}</Text>
+                        <Text>{`Added on ${formatDate(new Date(task.createdAt))}`}</Text>
+                    </Animated.View>
+
+                    <Pressable style={styles.backview} onPress={handleCompleteStatus}>
+                        <Text>{task.completed ? 'To do' : 'Complete'}</Text>
+                    </Pressable>
                 </>
-            </TouchableHighlight>
+            </View>
         </GestureDetector>
     )
 }
@@ -45,22 +64,31 @@ const styles = StyleSheet.create({
     container: {
         alignSelf: "stretch",
         paddingHorizontal: 20,
-        // marginBottom: 15,
         paddingVertical: 8,
         overflow: 'hidden',
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    animatedContainer: {
+        position: 'relative',
+        zIndex: 1,
+        backgroundColor: 'white',
+        alignSelf: 'stretch',
     },
     text: {
         fontSize: height * 0.020,
         color: '#444444',
         fontWeight: '400'
     },
-    ripple: {
+    backview: {
         position: 'absolute',
-        width: 150,  // Same width as the button
-        height: 150, // Same height as the button (or more, if you want ripple overflow)
-        borderRadius: 99,
-        backgroundColor: 'blue',
-    },
+        backgroundColor: Colors.backgroundBlue,
+        height: '100%',
+        width: '100%',
+        alignItems: 'flex-end',
+        justifyContent: 'center',
+        paddingHorizontal: 15,
+        borderRadius: 4,
+        zIndex: 0,
+    }
 });

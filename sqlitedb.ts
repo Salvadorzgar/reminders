@@ -26,52 +26,27 @@ export async function createDatabase() {
                 foreign key (taskId) references task(id) on delete cascade
             );
         `);
-        console.log(result);
         return true;
     } catch (error) {
-        console.log(error);
+        throw new Error("Error creating db")
     }
 }
 
 export async function createTask(title: string, description: string, completed: boolean) {
     try {
-        const result = await db.runAsync('insert into task (task, task_description, completed) values (?, ?, ?)', title, description, (completed ? 1 : 0));
-        console.log(result);
+        await db.runAsync('insert into task (task, task_description, completed) values (?, ?, ?)', title, description, (completed ? 1 : 0));
         return true;
     } catch (error) {
-        console.log(error);
-    }
-}
-
-export async function createSubtask(id: number, title: string, description: string, completed: boolean) {
-    try {
-        const result = await db.runAsync('insert into subtask (task, task_description, completed, taskId) values (?, ?, ?, ?)', title, description, completed ? 1 : 0, id);
-        console.log(result);
-        return true;
-    } catch (error) {
-        console.log(error);
+        throw new Error("Error creating task");
     }
 }
 
 export async function completeTask(id: number, isSubtask: boolean, completed: boolean) {
     try {
         const table = isSubtask ? 'subtask' : 'task';
-        const result = await db.runAsync(`update ${table} set completed = ?, updatedAt = ? where id = ?`, (completed ? 1 : 0), getCurrentDateTime(), id);
-        console.log(result);
-        return true;
+        await db.runAsync(`update ${table} set completed = ?, updatedAt = ? where id = ?`, (completed ? 1 : 0), getCurrentDateTime(), id);
     } catch (error) {
-        console.log(error);
-    }
-}
-
-export async function updateTask(id: number, isSubtask: boolean, title: string, desc: string) {
-    try {
-        const table = isSubtask ? 'subtask' : 'task';
-        const result = await db.runAsync(`update ${table} set task = ?, task_description = ?, updatedAt = ? where id = ?`, title, desc, getCurrentDateTime(),id);
-        console.log(result);
-        return true;
-    } catch (error) {
-        console.log(error);
+        throw new Error("Error completing task");
     }
 }
 
@@ -80,7 +55,6 @@ export async function getTasks(): Promise<Task[]> {
         const tasks = await db.getAllAsync('select * from task order by createdAt desc');
         return tasks as Task[];
     } catch (error) {
-        console.log(error);
         return [];
     }
 }

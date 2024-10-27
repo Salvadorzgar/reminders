@@ -10,9 +10,10 @@ import {
 import { Header } from "@/components/Header";
 import { Task } from "@/components/Task";
 import { TaskInput } from "@/components/TaskInput";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { getTasks } from "@/sqlitedb";
 import useTaskStore, { Task as TaskType } from "@/zustand/store";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 export default function Home() {
     const { setTasks, todoTasks, triggerUpdate } = useTaskStore((state) => state);
@@ -20,7 +21,6 @@ export default function Home() {
     useEffect(() => {
         const loadTasks = async () => {
             const tasks = await getTasks();
-            console.log(tasks);
             setTasks(tasks);
         }
 
@@ -36,11 +36,13 @@ export default function Home() {
     return (
         <View style={styles.mainView}>
             <Header header="Tasks" />
-            <FlatList
-                data={todoTasks}
-                renderItem={renderItem}
-                style={{ flex: 1 }}
-            />
+            <GestureDetector gesture={Gesture.Manual()}>
+                <FlatList
+                    data={todoTasks}
+                    renderItem={renderItem}
+                    style={{ flex: 1 }}
+                />
+            </GestureDetector>
             <TaskInput />
         </View>
     )

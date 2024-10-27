@@ -1,3 +1,4 @@
+import { Colors } from "@/constants/Colors";
 import { createTask } from "@/sqlitedb";
 import useTaskStore from "@/zustand/store";
 import { useState } from "react";
@@ -73,7 +74,7 @@ const styles = StyleSheet.create({
     addButton: {
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'blue',
+        backgroundColor: Colors.mainColor,
         borderRadius: 99,
         width: width * 0.085,
         height: width * 0.085,

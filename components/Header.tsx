@@ -16,7 +16,6 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "center",
         height: height * 0.05,
-        marginBottom: 25,
     },
     header: {
         fontSize: height * 0.025,
@@ -24,27 +23,3 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
     }
 })
-
-function some3(numeric) {
-    
-    if (numeric > 3999) {
-        return "Number out of range";
-    }
-
-    const nums = [
-        ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'],
-        ['X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC'],
-        ['C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM'],
-        ['M', 'MM', 'MMM'],
-    ]
-    let i = 0;
-    let romannum = '';
-    for (const num in numeric.toString().split("").reverse()) {
-        if (num !== '0') {
-            console.log(nums[i][parseInt(num) - 1])
-        }
-        i++;
-    }
-
-    return romannum;
-}
